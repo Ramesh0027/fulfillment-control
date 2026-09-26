@@ -1,0 +1,10 @@
+import { mkdirSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import express from 'express';
+import { Store } from './store.ts';
+import { createApp } from './app.ts';
+const path = process.env.DB_PATH || 'data/fulfillment.db'; mkdirSync(dirname(path),{recursive:true});
+const store = new Store(path); if (process.env.SEED_DEMO !== 'false') store.seed();
+const app = createApp(store); app.use(express.static(resolve('dist')));
+const server = app.listen(Number(process.env.PORT || 3000),process.env.HOST || '127.0.0.1',()=>console.log('Fulfillment Control: http://127.0.0.1:3000'));
+for(const signal of ['SIGINT','SIGTERM']) process.on(signal,()=>server.close(()=>{store.close();process.exit(0);}));
